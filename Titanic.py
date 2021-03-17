@@ -6,22 +6,8 @@ import seaborn as sns
 
 train_set = pd.read_csv('train.csv')
 test_set = pd.read_csv('test.csv')
-
-# Testing Pandas functions
 print(train_set.head(5))
-#print(train_set.shape)
-#print(train_set.index)
-#print(train_set.columns)
-#print(train_set.info())
-#print(train_set.min())
-#print(train_set.max())
-#print(train_set.mean())
-#print(train_set[['Name', 'Age']])
-#print(train_set["Age"].mean())
-#print(train_set["Age"].median())
-#print(train_set["Age"].max())
-#print(train_set["Age"].min())
-#print(train_set[0:2])
+
 
 Number_men = train_set[train_set['Sex'].str.match("male")].Sex.count()
 Number_women = train_set[train_set['Sex'].str.match("female")].Sex.count()
@@ -109,30 +95,38 @@ print(test_set_x)
 # Let us import the true values of the prediction so that we can check the
 # accuracy of our logistic regression training model
 
-test_set_y = pd.read_csv('gender_submission.csv')
-test_set_y = test_set_y['Survived']
-
-print(test_set_y)
-#print(np.isnan(test_set_x))
-#print(train_set_x.describe())
-#print(test_set_x.describe())
 
 # now the data, both the training data and the test data is cleaned and
 # prepared and we can proceed to applying regression models on the data
 # applying logistic regression to train the data
 
 from sklearn.linear_model import LogisticRegression
-log_model = LogisticRegression()
+log_model = LogisticRegression(max_iter=1000)
 log_model.fit(train_set_x, train_set_y)
 
+
+# let us now split the training set into two: a training set and a validation set
+# this way we can check the accuracy of our training model against actual values
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
+X_train, X_test, Y_train, Y_test = train_test_split(train_set_x, train_set_y, test_size=0.25)
+log_model.fit(X_train, Y_train)
+predictions_accurate = log_model.predict(X_test)
+print(log_model.score(X_test, Y_test))
+print(classification_report(Y_test, predictions_accurate))
+print(confusion_matrix(Y_test, predictions_accurate))
+
+# we achieve an accuracy of 81% using the logistic regression model
+
 # now we can predict the results for our test set
-# and check the accuracy
+# the accuracy of our predictions cannot be checked as we don't have the true values
+# the prediction is submitted to kaggle
 
 predictions = log_model.predict(test_set_x)
-print(log_model.score(test_set_x, test_set_y))
+predictions_df = pd.DataFrame(predictions)
+predictions_df.columns = ['Survived']
+predictions_df.to_csv('predictedoutput.csv')
 
-from sklearn.metrics import classification_report
-print(classification_report(test_set_y, predictions))
-
-from sklearn.metrics import confusion_matrix
-print(confusion_matrix(test_set_y, predictions))
